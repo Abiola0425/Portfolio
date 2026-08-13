@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Review Annotation — Sentiment & Category Labeling | Abiola Adebanjo</title>
+<style>
+  :root{
+    --ink:#1a2332;
+    --paper:#fbfaf7;
+    --panel:#ffffff;
+    --line:#e2e0d8;
+    --muted:#6b7280;
+    --teal:#0f6b5c;
+    --teal-soft:#e6f2ef;
+    --amber:#a8641c;
+    --amber-soft:#f7ecdd;
+    --rose:#9d3c3c;
+    --rose-soft:#f6e9e9;
+    --mono: 'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+    --sans: 'Inter','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:64px 28px 100px;}
+
+  /* Header */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:clamp(28px,4vw,42px);
+    line-height:1.15;
+    margin:0 0 10px;
+    font-weight:700;
+    letter-spacing:-.01em;
+  }
+  .byline{
+    color:var(--muted);
+    font-size:15px;
+    margin-bottom:36px;
+  }
+  .byline a{color:var(--teal);text-decoration:none;border-bottom:1px solid currentColor;}
+
+  /* Stat strip — signature element */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:48px;
+    background:var(--panel);
+  }
+  .stat{
+    padding:20px 16px;
+    border-right:1px solid var(--line);
+  }
+  .stat:last-child{border-right:none;}
+  .stat .num{
+    font-family:var(--mono);
+    font-size:24px;
+    font-weight:600;
+    color:var(--teal);
+  }
+  .stat .label{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:4px;
+  }
+
+  section{margin-bottom:44px;}
+  h2{
+    font-size:13px;
+    font-family:var(--mono);
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink);
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+    margin:0 0 18px;
+  }
+  p{margin:0 0 14px;font-size:15.5px;color:#2c3543;}
+  .lead{font-size:17px;color:var(--ink);}
+
+  ol.process{
+    counter-reset:step;
+    list-style:none;
+    margin:0;padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  ol.process li{
+    counter-increment:step;
+    position:relative;
+    padding-left:38px;
+    font-size:15px;
+    color:#2c3543;
+  }
+  ol.process li::before{
+    content:counter(step);
+    position:absolute;left:0;top:0;
+    width:24px;height:24px;
+    border-radius:50%;
+    background:var(--teal-soft);
+    color:var(--teal);
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* Table */
+  .tablewrap{
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--panel);
+  }
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    background:var(--ink);
+    color:#fff;
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:11.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:10px 12px;
+  }
+  tbody td{
+    padding:12px;
+    border-top:1px solid var(--line);
+    vertical-align:top;
+    color:#2c3543;
+  }
+  tbody tr:nth-child(odd){background:#fcfbf8;}
+  .rtext{max-width:340px;}
+  .tag{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .tag.pos{background:var(--teal-soft);color:var(--teal);}
+  .tag.neg{background:var(--rose-soft);color:var(--rose);}
+  .tag.neu{background:var(--amber-soft);color:var(--amber);}
+  .conf{font-family:var(--mono);font-size:12px;color:var(--muted);}
+
+  .note{
+    font-size:13.5px;
+    color:var(--muted);
+    margin-top:16px;
+  }
+
+  /* QA box */
+  .qa{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .qacard{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 18px;
+    background:var(--panel);
+  }
+  .qacard .k{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:6px;}
+  .qacard .v{font-size:15px;color:var(--ink);font-weight:600;}
+
+  footer{
+    margin-top:60px;
+    padding-top:24px;
+    border-top:1px solid var(--line);
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  @media (max-width:640px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .stat:nth-child(2){border-right:none;}
+    .qa{grid-template-columns:1fr;}
+    .rtext{max-width:none;}
+    thead{display:none;}
+    table, tbody, tr, td{display:block;width:100%;}
+    tbody tr{border-top:2px solid var(--line);padding:10px 0;}
+    tbody td{border-top:none;padding:4px 12px;}
+    tbody td::before{
+      content:attr(data-label);
+      display:block;
+      font-family:var(--mono);
+      font-size:10.5px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.06em;
+      margin-bottom:2px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Data Annotation Project</div>
+  <h1>Product Review Annotation — Sentiment &amp; Category Labeling</h1>
+  <div class="byline">By Abiola Adebanjo · Lagos, Nigeria · <a href="mailto:abiolaadebanjo04@gmail.com">abiolaadebanjo04@gmail.com</a></div>
+
+  <div class="stats">
+    <div class="stat"><div class="num">30</div><div class="label">Records labeled</div></div>
+    <div class="stat"><div class="num">96.7%</div><div class="label">Self-audited accuracy</div></div>
+    <div class="stat"><div class="num">17</div><div class="label">Records re-checked in QA</div></div>
+    <div class="stat"><div class="num">~50m</div><div class="label">Total time, label + QA</div></div>
+  </div>
+
+  <section>
+    <h2>Objective</h2>
+    <p class="lead">Label 30 e-commerce product reviews with sentiment and issue category to support customer-experience reporting, then run a self-QA pass to catch and correct labeling errors before delivery.</p>
+    <p>The dataset represents a typical raw export from a review platform: varied review length, mixed tone, and reviews that combine more than one topic — which is exactly where labeling guidelines matter most.</p>
+  </section>
+
+  <section>
+    <h2>Labels Applied</h2>
+    <p><strong>Sentiment:</strong> Positive / Negative / Neutral &nbsp;·&nbsp; <strong>Category:</strong> Product Quality / Shipping / Customer Service / Price / Packaging &nbsp;·&nbsp; <strong>Confidence:</strong> High / Medium / Low (self-flagged for review)</p>
+  </section>
+
+  <section>
+    <h2>Process</h2>
+    <ol class="process">
+      <li>Read the labeling guidelines and built a written rubric before touching the data.</li>
+      <li>First-pass labeling of all 30 records against that rubric.</li>
+      <li>Self-QA pass: re-checked every "Low" and "Medium" confidence row, plus a random 20% sample of "High" confidence rows.</li>
+      <li>Logged results, corrections, and final accuracy in a separate QA summary.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Sample of Labeled Data (10 of 30 records)</h2>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Review</th><th>Sentiment</th><th>Category</th><th>Confidence</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="ID">R001</td>
+            <td data-label="Review" class="rtext">Delivery took 9 days longer than promised and support never replied to my email.</td>
+            <td data-label="Sentiment"><span class="tag neg">Negative</span></td>
+            <td data-label="Category">Shipping</td>
+            <td data-label="Confidence" class="conf">High</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R002</td>
+            <td data-label="Review" class="rtext">Fabric quality is excellent, exactly as pictured, will buy again.</td>
+            <td data-label="Sentiment"><span class="tag pos">Positive</span></td>
+            <td data-label="Category">Product Quality</td>
+            <td data-label="Confidence" class="conf">High</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R003</td>
+            <td data-label="Review" class="rtext">Price dropped $10 the week after I bought it, a bit annoying but the product itself is fine.</td>
+            <td data-label="Sentiment"><span class="tag neu">Neutral</span></td>
+            <td data-label="Category">Price</td>
+            <td data-label="Confidence" class="conf">Medium</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R005</td>
+            <td data-label="Review" class="rtext">Customer service was rude and unhelpful when I asked about a refund.</td>
+            <td data-label="Sentiment"><span class="tag neg">Negative</span></td>
+            <td data-label="Category">Customer Service</td>
+            <td data-label="Confidence" class="conf">High</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R009</td>
+            <td data-label="Review" class="rtext">Support team resolved my issue within an hour, very impressed.</td>
+            <td data-label="Sentiment"><span class="tag pos">Positive</span></td>
+            <td data-label="Category">Customer Service</td>
+            <td data-label="Confidence" class="conf">High</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R011</td>
+            <td data-label="Review" class="rtext">Charged twice for one order, still waiting on a refund two weeks later.</td>
+            <td data-label="Sentiment"><span class="tag neg">Negative</span></td>
+            <td data-label="Category">Price</td>
+            <td data-label="Confidence" class="conf">Medium</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R012</td>
+            <td data-label="Review" class="rtext">Packaging was beautiful, felt like a premium unboxing experience.</td>
+            <td data-label="Sentiment"><span class="tag pos">Positive</span></td>
+            <td data-label="Category">Packaging</td>
+            <td data-label="Confidence" class="conf">High</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R018</td>
+            <td data-label="Review" class="rtext">Box was fine, product was fine, nothing to complain about.</td>
+            <td data-label="Sentiment"><span class="tag neu">Neutral</span></td>
+            <td data-label="Category">Packaging</td>
+            <td data-label="Confidence" class="conf">Low</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R020</td>
+            <td data-label="Review" class="rtext">For the price point this is a steal, exceeded my expectations.</td>
+            <td data-label="Sentiment"><span class="tag pos">Positive</span></td>
+            <td data-label="Category">Price</td>
+            <td data-label="Confidence" class="conf">High</td>
+          </tr>
+          <tr>
+            <td data-label="ID">R028</td>
+            <td data-label="Review" class="rtext">Support agent was friendly but couldn't actually solve my problem.</td>
+            <td data-label="Sentiment"><span class="tag neu">Neutral</span></td>
+            <td data-label="Category">Customer Service</td>
+            <td data-label="Confidence" class="conf">Low</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Full 30-record dataset, written guidelines, and QA log available in the companion workbook on request.</p>
+  </section>
+
+  <section>
+    <h2>QA Summary</h2>
+    <div class="qa">
+      <div class="qacard"><div class="k">Records re-checked</div><div class="v">17 of 30</div></div>
+      <div class="qacard"><div class="k">Confirmed correct</div><div class="v">16 of 17</div></div>
+      <div class="qacard"><div class="k">Corrected after review</div><div class="v">1 label (R018 — Category)</div></div>
+      <div class="qacard"><div class="k">Final self-audited accuracy</div><div class="v">96.7%</div></div>
+    </div>
+    <p class="note">Most common ambiguity: reviews mixing a mild complaint with an overall positive tone — resolved using the rubric's "primary driver" rule.</p>
+  </section>
+
+  <footer>
+    Prepared as a work sample for data annotation, labeling, and dataset quality-review roles. Contact: abiolaadebanjo04@gmail.com · +234 907 645 4641
+  </footer>
+
+</div>
+</body>
+</html>
